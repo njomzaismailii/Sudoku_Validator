@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+
+
+<head>
+    <title>Sudoku Validator</title>
+</head>
+
+<script type="text/javascript">
+    function Upload() {
+        var fileUpload = document.getElementById("fileUpload");
+        var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/;
+        if (regex.test(fileUpload.value.toLowerCase())) {
+            if (typeof(FileReader) != "undefined") {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var table = document.createElement("table");
+                    var p = document.createElement("p");
+                    var rows = e.target.result.split("\n");
+                    for (var i = 0; i < rows.length; i++) {
+                        var cells = rows[i].split(",");
+                        if (cells.length > 1) {
+                            var row = table.insertRow(-1);
+                            for (var j = 0; j < cells.length; j++) {
+                                var cell = row.insertCell(-1);
+                                cell.innerHTML = cells[j];
+                            }
+                        }
+                    }
+                    var dvCSV = document.getElementById("sudoku");
+                    dvCSV.innerHTML = "";
+                    dvCSV.appendChild(table);
+
+                    const text = e.target.result;
+                    const data = CSVToArray(text);
+                    if (isValidSudoku(data)) {
+                        var validationText = document.getElementById("validationText");
+                        validationText.innerHTML = `<span style="font-size:20px; margin-top: 29px">Valid Sudoku: <span style="color:blue">${true}</span></span>`
+                        validationText.appendChild(p);
+
+                    } else {
+                        var validationText = document.getElementById("validationText");
+                        validationText.innerHTML = `<span style="font-size:20px; margin-top: 29px">Valid Sudoku: <span style="color:blue">${false}</span></span>`
+                        validationText.appendChild(p);
+                    }
+                }
+
+                reader.readAsText(fileUpload.files[0]);
+            } else {
+                alert("This browser does not support HTML5.");
+            }
+        } else {
+            alert("Please upload a valid CSV file.");
+        }
+    }
+
+    const CSVToArray = (data, delimiter = ',', omitFirstRow = false) =>
+        data
+        .slice(omitFirstRow ? data.indexOf('\n') + 1 : 0)
+        .split('\n')
+        .map(v => v.split(delimiter));
+
+
+
+    var N = 9;
+
+    function isinRange(board) {
+        for (var i = 0; i < N; i++) {
+            for (var j = 0; j < N; j++) {
+                if (board[i][j] <= 0 ||
+                    board[i][j] > 9) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function csvToArray(str, delimiter = ",") {
+        const headers = str.slice(0, str.indexOf("\n")).split(delimiter);
+        const rows = str.slice(str.indexOf("\n") + 1).split("\n");
+        const arr = rows.map(function(row) {
+            const values = row.split(delimiter);
+            const el = headers.reduce(function(object, header, index) {
+                object[header] = values[index];
+                return object;
+            }, {});
+            return el;
+        });
+        return arr;
+    }
+
+    function isValidSudoku(board) {
+        if (isinRange(board) == false) {
+            return false;
+        }
+        var unique = Array(N + 1).fill(false);
+        for (var i = 0; i < N; i++) {
+            unique = Array(N + 1).fill(false);
+            for (var j = 0; j < N; j++) {
+                var Z = board[i][j];
+                if (unique[Z]) {
+                    return false;
+                }
+                unique[Z] = true;
+            }
+        }
+
+        for (var i = 0; i < N; i++) {
+            unique = Array(N + 1).fill(false);
+            for (var j = 0; j < N; j++) {
+                var Z = board[j][i];
+                if (unique[Z]) {
+                    return false;
+                }
+                unique[Z] = true;
+            }
+        }
+
+        for (var i = 0; i < N - 2; i += 3) {
+            for (var j = 0; j < N - 2; j += 3) {
+                unique = Array(N + 1).fill(false);
+                for (var k = 0; k < 3; k++) {
+                    for (var l = 0; l < 3; l++) {
+                        var X = i + k;
+                        var Y = j + l;
+                        var Z = board[X][Y];
+                        if (unique[Z]) {
+                            return false;
+                        }
+                        unique[Z] = true;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+</script>
+
+
+<h1 style="padding:20px">Sudoku Validator</h1>
+<div style="margin: 20px;">
+    <input type="file" id="fileUpload" />
+    <input type="button" id="upload" value="Validate" onclick="Upload()" />
+</div>
+<hr />
+<div style="width: 120px;
+  background-color: white;
+  border: 1px solid white;
+  margin-left: 20px;
+  margin-top: 30px;
+  padding: 20px;
+  align-items: flex-start;" id="sudoku">
+</div>
+<div style="
+  padding: 20px;
+  padding-left: 0;
+  margin-left: 20px;
+  align-items: flex-start;" id="validationText"></div>
+<hr />
+</div>
+</div>
